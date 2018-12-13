@@ -12,10 +12,10 @@ Version 2.8 --- 11/26/2018 21:39:58 PST
 
 int AutoFlag = 0; //Flag that indicates if Automatic mode is selected
 int PrevAutoFlag = -1;//Automatic mode flag that makes sure motor runs once when light changes
-int BTFlag = 0;// Flag that checks if there was a Bluetooth signal	
-const int LockDoor = 1; 
+int BTFlag = 0;// Flag that checks if there was a Bluetooth signal
+const int LockDoor = 1;
 const int UnlockDoor = 2;
-unsigned char motor[] = {0x03, 0x06, 0x0C, 0x09}; //1 step for the motor
+unsigned char motor[] = {0x93, 0xC6, 0x6C, 0x39}; //1 step for the motor
 //unsigned char motor[] = {0x01, 0x02, 0x04, 0x08};
 
 
@@ -72,20 +72,20 @@ void TickFct_Mode_Select() {
 			Motor_Clockwise();
 			BTFlag = 0;
 		}
-		PORTC = 0x02; //reset LEDs 
+		PORTC = 0x02; //reset LEDs
 		break;
 		case SM1_Auto_mode:
 		PORTC |= 0x01;
 		if( (AutoFlag == 1) && (PrevAutoFlag != AutoFlag))
 		{
-			//Unlocks the door when light is sensed and makes sure that motor runs once 
+			//Unlocks the door when light is sensed and makes sure that motor runs once
 			PORTC |= 0x04;
 			Motor_Clockwise();
 			PrevAutoFlag = AutoFlag;//Makes sure that motor ran once
 		}
 		else if( (AutoFlag == 0) && (PrevAutoFlag != AutoFlag))
 		{
-			//Locks the door when light is sensed and  
+			//Locks the door when light is sensed and
 			PORTC |= 0x08;
 			Motor_AntiClockwise();
 			PrevAutoFlag = AutoFlag; //Makes sure that motor ran once
@@ -127,7 +127,7 @@ void LightSenorSM() {
 			AutoFlag = 1; // detected light
 		}
 		break;
-		default: 
+		default:
 		break;
 	} // State actions
 	
@@ -152,7 +152,7 @@ void BT_SM(){
 		{
 			if(USART_Receive(0) == 0x00)
 			{
-				BTFlag = LockDoor; 
+				BTFlag = LockDoor;
 			}
 			else  if(USART_Receive(0) == 0xFF)
 			{
@@ -172,29 +172,29 @@ void BT_SM(){
 //------------------------------------------------
 void Motor_Clockwise(){
 	int h = 0;
-	for(int i = 0; i < 50; ++i)
+	for(int i = 0; i < 150; ++i)
+	{
+		if( h == 4)
 		{
-			if( h == 4)
-			{
-				h = 0;
-			}
-			PORTB = motor[h];
-			_delay_ms(14);
-			++h;
-		}	
-} 
+			h = 0;
+		}
+		PORTB = motor[h];
+		_delay_ms(20);
+		++h;
+	}
+}
 
 
 void Motor_AntiClockwise(){
 	int h = 3;
-	for(int i = 0; i < 50; ++i)
+	for(int i = 0; i < 150; ++i)
 	{
 		if( h == -1)
 		{
 			h = 3;
 		}
 		PORTB = motor[h];
-		_delay_ms(14);
+		_delay_ms(20);
 		--h;
 	}
 }
@@ -212,8 +212,8 @@ int main() {
 	USART_Flush(0);
 	
 	
-	TimerSet(50);
-	TimerOn();
+	//TimerSet(50);
+	//TimerOn();
 	SM1_State = SM1_Manual;
 	SM2_State = Sensor_Off;
 	SM3_State = BT_Receive;
@@ -226,11 +226,8 @@ int main() {
 		BT_SM();
 		TickFct_Mode_Select();
 		
-		while (!TimerFlag){}   // This 
-		TimerFlag = 0;         // Lower flag raised by timer
+		//while (!TimerFlag){}   // This
+		//TimerFlag = 0;         // Lower flag raised by timer
 	}
 }
-
-
-
 
